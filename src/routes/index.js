@@ -10,6 +10,7 @@ const chiSoDichVuRoutes = require('./chiSoDichVuRoutes');
 const suCoRoutes = require('./suCoRoutes');
 const toaNhaRoutes = require('./toaNhaRoutes');
 const danhSachDichVuRoutes = require('./danhSachDichVuRoutes');
+const chiTietHoaDonRoutes = require('./chiTietHoaDonRoutes');
 
 // Sử dụng các routes
 router.use('/nguoidung', nguoiDungRoutes);
@@ -20,6 +21,7 @@ router.use('/chisodichvu', chiSoDichVuRoutes);
 router.use('/suco', suCoRoutes);
 router.use('/toanha', toaNhaRoutes);
 router.use('/danhsachdichvu', danhSachDichVuRoutes);
+router.use('/chitiethoadon', chiTietHoaDonRoutes);
 
 // Route kiểm tra API
 router.get('/', (req, res) => {

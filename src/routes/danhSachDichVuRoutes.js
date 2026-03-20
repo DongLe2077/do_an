@@ -7,9 +7,6 @@ const roleMiddleware = require('../middlewares/roleMiddleware');
 // GET /api/danhsachdichvu - Lấy tất cả dịch vụ
 router.get('/', authMiddleware, DanhSachDichVuController.getAll);
 
-// GET /api/danhsachdichvu/phong/:Phong_id - Lấy dịch vụ theo phòng (đặt trước /:id)
-router.get('/phong/:Phong_id', authMiddleware, DanhSachDichVuController.getByPhong);
-
 // GET /api/danhsachdichvu/:id - Lấy dịch vụ theo ID
 router.get('/:id', authMiddleware, DanhSachDichVuController.getById);
 

@@ -33,34 +33,22 @@ const DanhSachDichVuController = {
         }
     },
 
-    // Lấy dịch vụ theo Phong_id
-    getByPhong: async (req, res) => {
-        try {
-            const { Phong_id } = req.params;
-            const data = await DanhSachDichVuModel.getByPhong(Phong_id);
-            return response.success(res, data, 'Lấy danh sách dịch vụ theo phòng thành công');
-        } catch (error) {
-            return response.error(res, error.message);
-        }
-    },
-
     // Tạo dịch vụ mới
     create: async (req, res) => {
         try {
-            const { TenDichVu, Phong_id, DonGia } = req.body;
+            const { TenDichVu, DonGia } = req.body;
             
-            if (!TenDichVu || !Phong_id) {
-                return response.error(res, 'Tên dịch vụ và Phong_id là bắt buộc', 400);
+            if (!TenDichVu) {
+                return response.error(res, 'Tên dịch vụ là bắt buộc', 400);
             }
             
             const MaDichVu = generateId();
-            const result = await DanhSachDichVuModel.create({ 
+            const insertId = await DanhSachDichVuModel.create({ 
                 MaDichVu, 
                 TenDichVu, 
-                Phong_id, 
                 DonGia: DonGia || 0 
             });
-            return response.success(res, { id: result.insertId, MaDichVu }, 'Tạo dịch vụ thành công', 201);
+            return response.success(res, { id: insertId, MaDichVu }, 'Tạo dịch vụ thành công', 201);
         } catch (error) {
             return response.error(res, error.message);
         }
