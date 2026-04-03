@@ -4,33 +4,31 @@ const SuCoController = require('../controllers/suCoController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
 
-// GET /api/suco - Lấy tất cả sự cố
+// GET /api/suco
 router.get('/', authMiddleware, SuCoController.getAll);
 
-// GET /api/suco/trangthai/:TrangThai - Lấy sự cố theo trạng thái (đặt trước /:id)
+// GET /api/suco/trangthai/:TrangThai
 router.get('/trangthai/:TrangThai', authMiddleware, SuCoController.getByTrangThai);
 
-// GET /api/suco/nguoibao/:NguoiBao_id - Lấy sự cố theo người báo
-router.get('/nguoibao/:NguoiBao_id', authMiddleware, SuCoController.getByNguoiBao);
+// GET /api/suco/nguoibao/:MaNguoiBao
+router.get('/nguoibao/:MaNguoiBao', authMiddleware, SuCoController.getByNguoiBao);
 
-// GET /api/suco/phong/:Phong_id - Lấy sự cố theo phòng
-router.get('/phong/:Phong_id', authMiddleware, SuCoController.getByPhong);
+// GET /api/suco/phong/:MaPhong
+router.get('/phong/:MaPhong', authMiddleware, SuCoController.getByPhong);
 
-// GET /api/suco/:id - Lấy sự cố theo ID
+// GET /api/suco/:id (MaSuCo)
 router.get('/:id', authMiddleware, SuCoController.getById);
 
-// POST /api/suco - Báo cáo sự cố mới (cư dân có thể báo cáo)
+// POST /api/suco
 router.post('/', authMiddleware, SuCoController.create);
 
-// PUT /api/suco/:id - Cập nhật sự cố (chỉ Ban quản lý)
-router.put('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.BAN_QUAN_LY), SuCoController.update);
+// PUT /api/suco/:id (MaSuCo)
+router.put('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.ADMIN), SuCoController.update);
 
-// PATCH /api/suco/:id/xuly - Xử lý sự cố (chỉ Ban quản lý)
-router.patch('/:id/xuly', authMiddleware, roleMiddleware(roleMiddleware.ROLES.BAN_QUAN_LY), SuCoController.xuLy);
+// PATCH /api/suco/:id/xuly
+router.patch('/:id/xuly', authMiddleware, roleMiddleware(roleMiddleware.ROLES.ADMIN), SuCoController.xuLy);
 
-// DELETE /api/suco/:id - Xóa sự cố (chỉ Ban quản lý)
-router.delete('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.BAN_QUAN_LY), SuCoController.delete);
-
-module.exports = router;
+// DELETE /api/suco/:id (MaSuCo)
+router.delete('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.ADMIN), SuCoController.delete);
 
 module.exports = router;

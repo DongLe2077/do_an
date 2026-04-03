@@ -21,15 +21,13 @@ const NguoiDungController = {
                 return response.error(res, 'Tên đăng nhập hoặc mật khẩu không đúng', 401);
             }
             
-            // So sánh mật khẩu đã hash
             const isMatch = await bcrypt.compare(MatKhau, user.MatKhau);
             if (!isMatch) {
                 return response.error(res, 'Tên đăng nhập hoặc mật khẩu không đúng', 401);
             }
             
-            // Tạo JWT token - sử dụng id (INT) thay vì MaNguoiDung
             const token = jwt.sign(
-                { id: user.id, VaiTro: user.VaiTro },
+                { MaNguoiDung: user.MaNguoiDung, VaiTro: user.VaiTro },
                 process.env.JWT_SECRET,
                 { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
             );
@@ -44,19 +42,17 @@ const NguoiDungController = {
     // Đăng ký
     register: async (req, res) => {
         try {
-            const { TenDangNhap, MatKhau, HoTen, SoDienThoai, VaiTro } = req.body;
+            const { TenDangNhap, MatKhau, VaiTro, Email } = req.body;
             
-            if (!TenDangNhap || !MatKhau || !HoTen) {
-                return response.error(res, 'Tên đăng nhập, mật khẩu và họ tên là bắt buộc', 400);
+            if (!TenDangNhap || !MatKhau) {
+                return response.error(res, 'Tên đăng nhập và mật khẩu là bắt buộc', 400);
             }
             
-            // Kiểm tra tên đăng nhập đã tồn tại
             const existingUser = await NguoiDungModel.getByUsername(TenDangNhap);
             if (existingUser) {
                 return response.error(res, 'Tên đăng nhập đã tồn tại', 400);
             }
             
-            // Hash mật khẩu
             const hashedPassword = await bcrypt.hash(MatKhau, 10);
             
             const MaNguoiDung = generateId();
@@ -64,10 +60,9 @@ const NguoiDungController = {
                 MaNguoiDung,
                 TenDangNhap,
                 MatKhau: hashedPassword,
-                HoTen,
-                SoDienThoai,
                 VaiTro: VaiTro || 'cudan',
-                TrangThai: 'hoatdong'
+                TrangThai: 'Hoạt động',
+                Email
             });
             
             return response.success(res, { MaNguoiDung }, 'Đăng ký thành công', 201);
@@ -86,7 +81,7 @@ const NguoiDungController = {
         }
     },
 
-    // Lấy người dùng theo ID
+    // Lấy người dùng theo MaNguoiDung
     getById: async (req, res) => {
         try {
             const { id } = req.params;
@@ -106,14 +101,18 @@ const NguoiDungController = {
     update: async (req, res) => {
         try {
             const { id } = req.params;
-            const { HoTen, SoDienThoai, VaiTro, TrangThai } = req.body;
+            let { VaiTro, TrangThai, Email } = req.body;
             
             const existing = await NguoiDungModel.getById(id);
             if (!existing) {
                 return response.error(res, 'Không tìm thấy người dùng', 404);
             }
             
-            await NguoiDungModel.update(id, { HoTen, SoDienThoai, VaiTro, TrangThai });
+            VaiTro = VaiTro !== undefined ? VaiTro : existing.VaiTro;
+            TrangThai = TrangThai !== undefined ? TrangThai : existing.TrangThai;
+            Email = Email !== undefined ? Email : existing.Email;
+            
+            await NguoiDungModel.update(id, { VaiTro, TrangThai, Email });
             return response.success(res, null, 'Cập nhật người dùng thành công');
         } catch (error) {
             return response.error(res, error.message);
@@ -137,16 +136,16 @@ const NguoiDungController = {
         }
     },
 
-    // Lấy thông tin profile (user đang đăng nhập)
+    // Lấy thông tin profile
     getProfile: async (req, res) => {
         try {
-            const userId = req.user?.id;
+            const MaNguoiDung = req.user?.MaNguoiDung;
             
-            if (!userId) {
+            if (!MaNguoiDung) {
                 return response.error(res, 'Không tìm thấy thông tin người dùng', 401);
             }
             
-            const data = await NguoiDungModel.getById(userId);
+            const data = await NguoiDungModel.getById(MaNguoiDung);
             if (!data) {
                 return response.error(res, 'Không tìm thấy người dùng', 404);
             }
@@ -176,13 +175,11 @@ const NguoiDungController = {
                 return response.error(res, 'Không tìm thấy người dùng', 404);
             }
             
-            // So sánh mật khẩu đã hash
             const isMatch = await bcrypt.compare(MatKhauCu, user.MatKhau);
             if (!isMatch) {
                 return response.error(res, 'Mật khẩu cũ không đúng', 400);
             }
             
-            // Hash mật khẩu mới
             const hashedPassword = await bcrypt.hash(MatKhauMoi, 10);
             await NguoiDungModel.updatePassword(id, hashedPassword);
             
@@ -192,15 +189,15 @@ const NguoiDungController = {
         }
     },
 
-    // Set role (phân quyền) - chỉ Ban quản lý
+    // Set role
     setRole: async (req, res) => {
         try {
             const { id } = req.params;
             const { VaiTro } = req.body;
             
-            const validRoles = ['banquanly', 'cudan'];
+            const validRoles = ['admin', 'user', 'cudan', 'kythuat'];
             if (!VaiTro || !validRoles.includes(VaiTro)) {
-                return response.error(res, 'VaiTro không hợp lệ. Chọn: banquanly hoặc cudan', 400);
+                return response.error(res, 'VaiTro không hợp lệ. Chọn: admin, user, cudan, kythuat', 400);
             }
             
             const existing = await NguoiDungModel.getById(id);

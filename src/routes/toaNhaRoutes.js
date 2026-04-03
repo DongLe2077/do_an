@@ -4,19 +4,19 @@ const ToaNhaController = require('../controllers/toaNhaController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
 
-// GET /api/toanha - Lấy tất cả tòa nhà
+// GET /api/toanha - Láº¥y táº¥t cáº£ tÃ²a nhÃ 
 router.get('/', ToaNhaController.getAll);
 
-// GET /api/toanha/:id - Lấy tòa nhà theo ID
+// GET /api/toanha/:id - Láº¥y tÃ²a nhÃ  theo ID
 router.get('/:id', ToaNhaController.getById);
 
-// POST /api/toanha - Tạo tòa nhà mới (chỉ Ban quản lý)
-router.post('/', authMiddleware, roleMiddleware(roleMiddleware.ROLES.BAN_QUAN_LY), ToaNhaController.create);
+// POST /api/toanha - Táº¡o tÃ²a nhÃ  má»›i (chá»‰ Ban quáº£n lÃ½)
+router.post('/', authMiddleware, roleMiddleware(roleMiddleware.ROLES.ADMIN), ToaNhaController.create);
 
-// PUT /api/toanha/:id - Cập nhật tòa nhà (chỉ Ban quản lý)
-router.put('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.BAN_QUAN_LY), ToaNhaController.update);
+// PUT /api/toanha/:id - Cáº­p nháº­t tÃ²a nhÃ  (chá»‰ Ban quáº£n lÃ½)
+router.put('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.ADMIN), ToaNhaController.update);
 
-// DELETE /api/toanha/:id - Xóa tòa nhà (chỉ Ban quản lý)
-router.delete('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.BAN_QUAN_LY), ToaNhaController.delete);
+// DELETE /api/toanha/:id - XÃ³a tÃ²a nhÃ  (chá»‰ Ban quáº£n lÃ½)
+router.delete('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.ADMIN), ToaNhaController.delete);
 
 module.exports = router;

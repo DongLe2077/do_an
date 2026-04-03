@@ -1,14 +1,10 @@
 const HoaDonModel = require('../models/hoaDonModel');
-const ChiTietHoaDonModel = require('../models/chiTietHoaDonModel');
+const ChiSoDichVuModel = require('../models/chiSoDichVuModel');
 const response = require('../utils/responseFormat');
 
-// Generate unique ID for HoaDon
-const generateId = () => {
-    return 'HD' + Date.now().toString().slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
-};
+const generateId = () => 'HD' + Date.now().toString().slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
 
 const HoaDonController = {
-    // Lấy tất cả hóa đơn
     getAll: async (req, res) => {
         try {
             const data = await HoaDonModel.getAll();
@@ -18,38 +14,27 @@ const HoaDonController = {
         }
     },
 
-    // Lấy hóa đơn theo ID (kèm chi tiết)
     getById: async (req, res) => {
         try {
             const { id } = req.params;
             const data = await HoaDonModel.getById(id);
-            
-            if (!data) {
-                return response.error(res, 'Không tìm thấy hóa đơn', 404);
-            }
-
-            // Lấy chi tiết hóa đơn
-            const chiTiet = await ChiTietHoaDonModel.getByHoaDon(id);
-            data.ChiTiet = chiTiet;
-            
+            if (!data) return response.error(res, 'Không tìm thấy hóa đơn', 404);
             return response.success(res, data, 'Lấy thông tin hóa đơn thành công');
         } catch (error) {
             return response.error(res, error.message);
         }
     },
 
-    // Lấy hóa đơn theo phòng
     getByPhong: async (req, res) => {
         try {
-            const { Phong_id } = req.params;
-            const data = await HoaDonModel.getByPhong(Phong_id);
+            const { MaPhong } = req.params;
+            const data = await HoaDonModel.getByPhong(MaPhong);
             return response.success(res, data, 'Lấy danh sách hóa đơn theo phòng thành công');
         } catch (error) {
             return response.error(res, error.message);
         }
     },
 
-    // Lấy hóa đơn theo trạng thái
     getByTrangThai: async (req, res) => {
         try {
             const { TrangThai } = req.params;
@@ -60,51 +45,36 @@ const HoaDonController = {
         }
     },
 
-    // Tạo hóa đơn mới (hỗ trợ mảng ChiTiet để tự tính TongTien)
     create: async (req, res) => {
         try {
-            const { MaHoaDon, ThangThu, Phong_id, TongTien, TrangThai, HanDongTien, ChiTiet } = req.body;
-            
-            if (!Phong_id || !ThangThu) {
-                return response.error(res, 'Phòng và tháng thu là bắt buộc', 400);
-            }
+            const { MaHoaDon, MaPhong, ThangThu, TongTien, TrangThai, HanDongTien } = req.body;
+            if (!MaPhong || !ThangThu) return response.error(res, 'Mã phòng và tháng thu là bắt buộc', 400);
 
-            // Tính TongTien từ ChiTiet nếu có
-            let tongTien = TongTien || 0;
-            if (ChiTiet && ChiTiet.length > 0) {
-                tongTien = ChiTiet.reduce((sum, item) => {
-                    return sum + ((item.SoLuong || 1) * (item.DonGia || 0));
-                }, 0);
-            }
-            
             const maHoaDon = MaHoaDon || generateId();
-            const insertId = await HoaDonModel.create({ 
-                MaHoaDon: maHoaDon, ThangThu, Phong_id, TongTien: tongTien, 
-                TrangThai: TrangThai || 'chuathanhtoan', HanDongTien 
+            await HoaDonModel.create({
+                MaHoaDon: maHoaDon, MaPhong, ThangThu,
+                TongTien: TongTien || 0,
+                TrangThai: TrangThai || 'Chưa thanh toán',
+                HanDongTien
             });
-
-            // Tạo chi tiết hóa đơn nếu có
-            if (ChiTiet && ChiTiet.length > 0) {
-                await ChiTietHoaDonModel.createMany(insertId, ChiTiet);
-            }
-
-            return response.success(res, { id: insertId, MaHoaDon: maHoaDon, TongTien: tongTien }, 'Tạo hóa đơn thành công', 201);
+            return response.success(res, { MaHoaDon: maHoaDon }, 'Tạo hóa đơn thành công', 201);
         } catch (error) {
             return response.error(res, error.message);
         }
     },
 
-    // Cập nhật hóa đơn
     update: async (req, res) => {
         try {
             const { id } = req.params;
-            const { TongTien, TrangThai, HanDongTien } = req.body;
-            
+            let { TongTien, TrangThai, HanDongTien } = req.body;
+
             const existing = await HoaDonModel.getById(id);
-            if (!existing) {
-                return response.error(res, 'Không tìm thấy hóa đơn', 404);
-            }
-            
+            if (!existing) return response.error(res, 'Không tìm thấy hóa đơn', 404);
+
+            TongTien = TongTien !== undefined ? TongTien : existing.TongTien;
+            TrangThai = TrangThai !== undefined ? TrangThai : existing.TrangThai;
+            HanDongTien = HanDongTien !== undefined ? HanDongTien : existing.HanDongTien;
+
             await HoaDonModel.update(id, { TongTien, TrangThai, HanDongTien });
             return response.success(res, null, 'Cập nhật hóa đơn thành công');
         } catch (error) {
@@ -112,33 +82,62 @@ const HoaDonController = {
         }
     },
 
-    // Thanh toán hóa đơn
     thanhToan: async (req, res) => {
         try {
             const { id } = req.params;
-            
             const existing = await HoaDonModel.getById(id);
-            if (!existing) {
-                return response.error(res, 'Không tìm thấy hóa đơn', 404);
-            }
-            
-            await HoaDonModel.updateTrangThai(id, 'dathanhtoan');
+            if (!existing) return response.error(res, 'Không tìm thấy hóa đơn', 404);
+
+            await HoaDonModel.updateTrangThai(id, 'Đã thanh toán');
             return response.success(res, null, 'Thanh toán hóa đơn thành công');
         } catch (error) {
             return response.error(res, error.message);
         }
     },
 
-    // Xóa hóa đơn
+    tinhTienTuDong: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const existing = await HoaDonModel.getById(id);
+            if (!existing) return response.error(res, 'Không tìm thấy hóa đơn', 404);
+
+            const danhSachDichVu = await ChiSoDichVuModel.getByHoaDon(id);
+            
+            let total = 0;
+            for (const item of danhSachDichVu) {
+                const donGia = item.DonGia || 0;
+                
+                if (item.ChiSoHienTai !== null && item.ChiSoHienTai !== undefined && item.ChiSoLanGhiTruoc !== null && item.ChiSoLanGhiTruoc !== undefined) {
+                    // Tính theo số khối/chỉ số (đồng hồ điện, nước)
+                    const suDung = item.ChiSoHienTai - item.ChiSoLanGhiTruoc;
+                    if (suDung > 0) total += suDung * donGia;
+                } else if (item.SoLuong !== null && item.SoLuong !== undefined) {
+                    // Tính theo đầu số lượng (số thẻ xe, rác...)
+                    total += item.SoLuong * donGia;
+                } else {
+                    // Phí cố định x1
+                    total += donGia;
+                }
+            }
+
+            await HoaDonModel.update(id, { 
+                TongTien: total, 
+                TrangThai: existing.TrangThai, 
+                HanDongTien: existing.HanDongTien 
+            });
+
+            return response.success(res, { TongTien: total }, 'Đã tính tổng tiền hóa đơn tự động thành công');
+        } catch (error) {
+            return response.error(res, error.message);
+        }
+    },
+
     delete: async (req, res) => {
         try {
             const { id } = req.params;
-            
             const existing = await HoaDonModel.getById(id);
-            if (!existing) {
-                return response.error(res, 'Không tìm thấy hóa đơn', 404);
-            }
-            
+            if (!existing) return response.error(res, 'Không tìm thấy hóa đơn', 404);
+
             await HoaDonModel.delete(id);
             return response.success(res, null, 'Xóa hóa đơn thành công');
         } catch (error) {

@@ -7,41 +7,35 @@ const DanhSachDichVuModel = {
         return rows;
     },
 
-    // Lấy dịch vụ theo ID
-    getById: async (id) => {
-        const [rows] = await db.query('SELECT * FROM danhsachdichvu WHERE id = ?', [id]);
-        return rows[0];
-    },
-
-    // Lấy dịch vụ theo mã
-    getByMa: async (MaDichVu) => {
+    // Lấy dịch vụ theo MaDichVu
+    getById: async (MaDichVu) => {
         const [rows] = await db.query('SELECT * FROM danhsachdichvu WHERE MaDichVu = ?', [MaDichVu]);
         return rows[0];
     },
 
     // Tạo dịch vụ mới
     create: async (data) => {
-        const { MaDichVu, TenDichVu, DonGia } = data;
+        const { MaDichVu, TenDichVu, DonGia, DonViTinh, LoaiDichVu } = data;
         const [result] = await db.query(
-            'INSERT INTO danhsachdichvu (MaDichVu, TenDichVu, DonGia) VALUES (?, ?, ?)',
-            [MaDichVu, TenDichVu, DonGia]
+            'INSERT INTO danhsachdichvu (MaDichVu, TenDichVu, DonGia, DonViTinh, LoaiDichVu) VALUES (?, ?, ?, ?, ?)',
+            [MaDichVu, TenDichVu, DonGia || 0, DonViTinh || null, LoaiDichVu || 1]
         );
-        return result.insertId;
+        return result.affectedRows;
     },
 
     // Cập nhật dịch vụ
-    update: async (id, data) => {
-        const { TenDichVu, DonGia } = data;
+    update: async (MaDichVu, data) => {
+        const { TenDichVu, DonGia, DonViTinh, LoaiDichVu } = data;
         const [result] = await db.query(
-            'UPDATE danhsachdichvu SET TenDichVu = ?, DonGia = ? WHERE id = ?',
-            [TenDichVu, DonGia, id]
+            'UPDATE danhsachdichvu SET TenDichVu = ?, DonGia = ?, DonViTinh = ?, LoaiDichVu = ? WHERE MaDichVu = ?',
+            [TenDichVu, DonGia, DonViTinh, LoaiDichVu, MaDichVu]
         );
         return result.affectedRows;
     },
 
     // Xóa dịch vụ
-    delete: async (id) => {
-        const [result] = await db.query('DELETE FROM danhsachdichvu WHERE id = ?', [id]);
+    delete: async (MaDichVu) => {
+        const [result] = await db.query('DELETE FROM danhsachdichvu WHERE MaDichVu = ?', [MaDichVu]);
         return result.affectedRows;
     }
 };

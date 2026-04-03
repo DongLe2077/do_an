@@ -1,10 +1,9 @@
-// Middleware phân quyền (Kiểm tra role: Ban quản lý / Cư dân)
+// Middleware phân quyền (Kiểm tra role: Admin / User / Cư dân / Kỹ thuật)
 
 const roleMiddleware = (...allowedRoles) => {
     return (req, res, next) => {
         try {
             // req.user được gán từ authMiddleware sau khi verify token
-            // VaiTro được lưu trong token
             const userRole = req.user?.VaiTro;
 
             if (!userRole) {
@@ -31,10 +30,12 @@ const roleMiddleware = (...allowedRoles) => {
     };
 };
 
-// Định nghĩa các role theo database schema
+// Định nghĩa các role theo database schema mới (ENUM: 'admin', 'user', 'cudan', 'kythuat')
 const ROLES = {
-    BAN_QUAN_LY: 'banquanly',
-    CU_DAN: 'cudan'
+    ADMIN: 'admin',
+    USER: 'user',
+    CU_DAN: 'cudan',
+    KY_THUAT: 'kythuat'
 };
 
 // Export cả function và ROLES để sử dụng

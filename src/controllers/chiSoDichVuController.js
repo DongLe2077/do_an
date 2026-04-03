@@ -1,13 +1,9 @@
 const ChiSoDichVuModel = require('../models/chiSoDichVuModel');
 const response = require('../utils/responseFormat');
 
-// Generate unique ID for ChiSoDichVu
-const generateId = () => {
-    return 'CS' + Date.now().toString().slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
-};
+const generateId = () => 'CS' + Date.now().toString().slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
 
 const ChiSoDichVuController = {
-    // Lấy tất cả chỉ số dịch vụ
     getAll: async (req, res) => {
         try {
             const data = await ChiSoDichVuModel.getAll();
@@ -17,96 +13,81 @@ const ChiSoDichVuController = {
         }
     },
 
-    // Lấy chỉ số theo ID
     getById: async (req, res) => {
         try {
             const { id } = req.params;
             const data = await ChiSoDichVuModel.getById(id);
-            
-            if (!data) {
-                return response.error(res, 'Không tìm thấy chỉ số dịch vụ', 404);
-            }
-            
+            if (!data) return response.error(res, 'Không tìm thấy chỉ số dịch vụ', 404);
             return response.success(res, data, 'Lấy thông tin chỉ số dịch vụ thành công');
         } catch (error) {
             return response.error(res, error.message);
         }
     },
 
-    // Lấy chỉ số theo phòng (Phong_id)
-    getByPhong: async (req, res) => {
+    getByHoaDon: async (req, res) => {
         try {
-            const { Phong_id } = req.params;
-            const data = await ChiSoDichVuModel.getByPhong(Phong_id);
-            return response.success(res, data, 'Lấy danh sách chỉ số dịch vụ theo phòng thành công');
+            const { MaHoaDon } = req.params;
+            const data = await ChiSoDichVuModel.getByHoaDon(MaHoaDon);
+            return response.success(res, data, 'Lấy danh sách chỉ số theo hóa đơn thành công');
         } catch (error) {
             return response.error(res, error.message);
         }
     },
 
-    // Lấy chỉ số theo tháng ghi
-    getByThangGhi: async (req, res) => {
+    getByNgayGhi: async (req, res) => {
         try {
-            const { ThangGhi } = req.params;
-            const data = await ChiSoDichVuModel.getByThangGhi(ThangGhi);
-            return response.success(res, data, 'Lấy danh sách chỉ số theo tháng ghi thành công');
+            const { NgayGhi } = req.params;
+            const data = await ChiSoDichVuModel.getByNgayGhi(NgayGhi);
+            return response.success(res, data, 'Lấy danh sách chỉ số theo ngày ghi thành công');
         } catch (error) {
             return response.error(res, error.message);
         }
     },
 
-    // Tạo chỉ số dịch vụ mới
     create: async (req, res) => {
         try {
-            const { Phong_id, DichVu_id, ChiSoLanGhiTruoc, ChiSoHienTai, ThangGhi } = req.body;
-            
-            if (!Phong_id || !ThangGhi) {
-                return response.error(res, 'Phong_id và tháng ghi là bắt buộc', 400);
-            }
-            
+            const { MaDichVu, MaHoaDon, ChiSoLanGhiTruoc, ChiSoHienTai, SoLuong, NgayGhi } = req.body;
+            if (!MaDichVu) return response.error(res, 'Mã dịch vụ là bắt buộc', 400);
+
             const MaGhi = generateId();
-            const result = await ChiSoDichVuModel.create({ 
-                MaGhi, 
-                Phong_id, 
-                DichVu_id,
-                ChiSoLanGhiTruoc: ChiSoLanGhiTruoc || 0, 
-                ChiSoHienTai: ChiSoHienTai || 0, 
-                ThangGhi 
+            await ChiSoDichVuModel.create({
+                MaGhi, MaDichVu, MaHoaDon,
+                ChiSoLanGhiTruoc, ChiSoHienTai, SoLuong, NgayGhi
             });
-            return response.success(res, { id: result, MaGhi }, 'Tạo chỉ số dịch vụ thành công', 201);
+            return response.success(res, { MaGhi }, 'Tạo chỉ số dịch vụ thành công', 201);
         } catch (error) {
             return response.error(res, error.message);
         }
     },
 
-    // Cập nhật chỉ số dịch vụ
     update: async (req, res) => {
         try {
             const { id } = req.params;
-            const { DichVu_id, ChiSoLanGhiTruoc, ChiSoHienTai } = req.body;
-            
+            const { MaDichVu, MaHoaDon, ChiSoLanGhiTruoc, ChiSoHienTai, SoLuong, NgayGhi } = req.body;
+
             const existing = await ChiSoDichVuModel.getById(id);
-            if (!existing) {
-                return response.error(res, 'Không tìm thấy chỉ số dịch vụ', 404);
-            }
-            
-            await ChiSoDichVuModel.update(id, { DichVu_id, ChiSoLanGhiTruoc, ChiSoHienTai });
+            if (!existing) return response.error(res, 'Không tìm thấy chỉ số dịch vụ', 404);
+
+            await ChiSoDichVuModel.update(id, {
+                MaDichVu: MaDichVu || existing.MaDichVu,
+                MaHoaDon: MaHoaDon !== undefined ? MaHoaDon : existing.MaHoaDon,
+                ChiSoLanGhiTruoc: ChiSoLanGhiTruoc !== undefined ? ChiSoLanGhiTruoc : existing.ChiSoLanGhiTruoc,
+                ChiSoHienTai: ChiSoHienTai !== undefined ? ChiSoHienTai : existing.ChiSoHienTai,
+                SoLuong: SoLuong !== undefined ? SoLuong : existing.SoLuong,
+                NgayGhi: NgayGhi || existing.NgayGhi
+            });
             return response.success(res, null, 'Cập nhật chỉ số dịch vụ thành công');
         } catch (error) {
             return response.error(res, error.message);
         }
     },
 
-    // Xóa chỉ số dịch vụ
     delete: async (req, res) => {
         try {
             const { id } = req.params;
-            
             const existing = await ChiSoDichVuModel.getById(id);
-            if (!existing) {
-                return response.error(res, 'Không tìm thấy chỉ số dịch vụ', 404);
-            }
-            
+            if (!existing) return response.error(res, 'Không tìm thấy chỉ số dịch vụ', 404);
+
             await ChiSoDichVuModel.delete(id);
             return response.success(res, null, 'Xóa chỉ số dịch vụ thành công');
         } catch (error) {

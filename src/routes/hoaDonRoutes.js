@@ -4,30 +4,31 @@ const HoaDonController = require('../controllers/hoaDonController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
 
-// GET /api/hoadon - Lấy tất cả hóa đơn
+// GET /api/hoadon
 router.get('/', authMiddleware, HoaDonController.getAll);
 
-// GET /api/hoadon/phong/:Phong_id - Lấy hóa đơn theo phòng (đặt trước /:id)
-router.get('/phong/:Phong_id', authMiddleware, HoaDonController.getByPhong);
+// GET /api/hoadon/phong/:MaPhong
+router.get('/phong/:MaPhong', authMiddleware, HoaDonController.getByPhong);
 
-// GET /api/hoadon/trangthai/:TrangThai - Lấy hóa đơn theo trạng thái
+// GET /api/hoadon/trangthai/:TrangThai
 router.get('/trangthai/:TrangThai', authMiddleware, HoaDonController.getByTrangThai);
 
-// GET /api/hoadon/:id - Lấy hóa đơn theo ID
+// GET /api/hoadon/:id (MaHoaDon)
 router.get('/:id', authMiddleware, HoaDonController.getById);
 
-// POST /api/hoadon - Tạo hóa đơn mới (chỉ Ban quản lý)
-router.post('/', authMiddleware, roleMiddleware(roleMiddleware.ROLES.BAN_QUAN_LY), HoaDonController.create);
+// POST /api/hoadon
+router.post('/', authMiddleware, roleMiddleware(roleMiddleware.ROLES.ADMIN), HoaDonController.create);
 
-// PUT /api/hoadon/:id - Cập nhật hóa đơn (chỉ Ban quản lý)
-router.put('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.BAN_QUAN_LY), HoaDonController.update);
+// PUT /api/hoadon/:id (MaHoaDon)
+router.put('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.ADMIN), HoaDonController.update);
 
-// PATCH /api/hoadon/:id/thanhtoan - Thanh toán hóa đơn
+// PATCH /api/hoadon/:id/thanhtoan
 router.patch('/:id/thanhtoan', authMiddleware, HoaDonController.thanhToan);
 
-// DELETE /api/hoadon/:id - Xóa hóa đơn (chỉ Ban quản lý)
-router.delete('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.BAN_QUAN_LY), HoaDonController.delete);
+// PUT /api/hoadon/:id/tinh-tien
+router.put('/:id/tinh-tien', authMiddleware, roleMiddleware(roleMiddleware.ROLES.ADMIN), HoaDonController.tinhTienTuDong);
 
-module.exports = router;
+// DELETE /api/hoadon/:id (MaHoaDon)
+router.delete('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.ADMIN), HoaDonController.delete);
 
 module.exports = router;

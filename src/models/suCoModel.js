@@ -4,25 +4,23 @@ const SuCoModel = {
     // Lấy tất cả sự cố
     getAll: async () => {
         const [rows] = await db.query(`
-            SELECT sc.*, nb.HoTen as TenNguoiBao, ns.HoTen as TenNguoiSua, p.SoPhong
+            SELECT sc.*, nd.TenDangNhap as TenNguoiBao, p.SoPhong
             FROM suco sc 
-            LEFT JOIN nguoidung nb ON sc.NguoiBao_id = nb.id
-            LEFT JOIN nguoidung ns ON sc.NguoiSua_id = ns.id
-            LEFT JOIN phong p ON sc.Phong_id = p.id
+            LEFT JOIN nguoidung nd ON sc.MaNguoiBao = nd.MaNguoiDung
+            LEFT JOIN phong p ON sc.MaPhong = p.MaPhong
         `);
         return rows;
     },
 
-    // Lấy sự cố theo ID
-    getById: async (id) => {
+    // Lấy sự cố theo MaSuCo
+    getById: async (MaSuCo) => {
         const [rows] = await db.query(`
-            SELECT sc.*, nb.HoTen as TenNguoiBao, ns.HoTen as TenNguoiSua, p.SoPhong
+            SELECT sc.*, nd.TenDangNhap as TenNguoiBao, p.SoPhong
             FROM suco sc 
-            LEFT JOIN nguoidung nb ON sc.NguoiBao_id = nb.id
-            LEFT JOIN nguoidung ns ON sc.NguoiSua_id = ns.id
-            LEFT JOIN phong p ON sc.Phong_id = p.id
-            WHERE sc.id = ?
-        `, [id]);
+            LEFT JOIN nguoidung nd ON sc.MaNguoiBao = nd.MaNguoiDung
+            LEFT JOIN phong p ON sc.MaPhong = p.MaPhong
+            WHERE sc.MaSuCo = ?
+        `, [MaSuCo]);
         return rows[0];
     },
 
@@ -33,49 +31,49 @@ const SuCoModel = {
     },
 
     // Lấy sự cố theo người báo
-    getByNguoiBao: async (NguoiBao_id) => {
-        const [rows] = await db.query('SELECT * FROM suco WHERE NguoiBao_id = ?', [NguoiBao_id]);
+    getByNguoiBao: async (MaNguoiBao) => {
+        const [rows] = await db.query('SELECT * FROM suco WHERE MaNguoiBao = ?', [MaNguoiBao]);
         return rows;
     },
 
     // Lấy sự cố theo phòng
-    getByPhong: async (Phong_id) => {
-        const [rows] = await db.query('SELECT * FROM suco WHERE Phong_id = ?', [Phong_id]);
+    getByPhong: async (MaPhong) => {
+        const [rows] = await db.query('SELECT * FROM suco WHERE MaPhong = ?', [MaPhong]);
         return rows;
     },
 
     // Tạo sự cố mới
     create: async (data) => {
-        const { MaSuCo, NguoiBao_id, Phong_id, TenSuCo, MoTa, AnhSuCo, NgayBaoCao, TrangThai } = data;
+        const { MaSuCo, MaNguoiBao, MaPhong, TenSuCo, MoTa, AnhSuCo, NgayBaoCao, TrangThai } = data;
         const [result] = await db.query(
-            'INSERT INTO suco (MaSuCo, NguoiBao_id, Phong_id, TenSuCo, MoTa, AnhSuCo, NgayBaoCao, TrangThai) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [MaSuCo, NguoiBao_id, Phong_id, TenSuCo, MoTa, AnhSuCo, NgayBaoCao || new Date().toISOString().split('T')[0], TrangThai || 'choxuly']
+            'INSERT INTO suco (MaSuCo, MaNguoiBao, MaPhong, TenSuCo, MoTa, AnhSuCo, NgayBaoCao, TrangThai) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [MaSuCo, MaNguoiBao, MaPhong, TenSuCo, MoTa, AnhSuCo, NgayBaoCao || new Date().toISOString().split('T')[0], TrangThai || 'Chờ duyệt']
         );
-        return result.insertId;
+        return result.affectedRows;
     },
 
     // Cập nhật sự cố
-    update: async (id, data) => {
-        const { TenSuCo, MoTa, AnhSuCo, TrangThai, NguoiSua_id } = data;
+    update: async (MaSuCo, data) => {
+        const { TenSuCo, MoTa, AnhSuCo, TrangThai, NguoiXuLy, NgayXuLy } = data;
         const [result] = await db.query(
-            'UPDATE suco SET TenSuCo = ?, MoTa = ?, AnhSuCo = ?, TrangThai = ?, NguoiSua_id = ? WHERE id = ?',
-            [TenSuCo, MoTa, AnhSuCo, TrangThai, NguoiSua_id, id]
+            'UPDATE suco SET TenSuCo = ?, MoTa = ?, AnhSuCo = ?, TrangThai = ?, NguoiXuLy = ?, NgayXuLy = ? WHERE MaSuCo = ?',
+            [TenSuCo, MoTa, AnhSuCo, TrangThai, NguoiXuLy, NgayXuLy, MaSuCo]
         );
         return result.affectedRows;
     },
 
     // Cập nhật trạng thái sự cố
-    updateTrangThai: async (id, TrangThai, NguoiSua_id) => {
+    updateTrangThai: async (MaSuCo, TrangThai, NguoiXuLy) => {
         const [result] = await db.query(
-            'UPDATE suco SET TrangThai = ?, NguoiSua_id = ? WHERE id = ?',
-            [TrangThai, NguoiSua_id, id]
+            'UPDATE suco SET TrangThai = ?, NguoiXuLy = ?, NgayXuLy = ? WHERE MaSuCo = ?',
+            [TrangThai, NguoiXuLy, new Date().toISOString().split('T')[0], MaSuCo]
         );
         return result.affectedRows;
     },
 
     // Xóa sự cố
-    delete: async (id) => {
-        const [result] = await db.query('DELETE FROM suco WHERE id = ?', [id]);
+    delete: async (MaSuCo) => {
+        const [result] = await db.query('DELETE FROM suco WHERE MaSuCo = ?', [MaSuCo]);
         return result.affectedRows;
     }
 };

@@ -4,27 +4,25 @@ const ChiSoDichVuController = require('../controllers/chiSoDichVuController');
 const authMiddleware = require('../middlewares/authMiddleware');
 const roleMiddleware = require('../middlewares/roleMiddleware');
 
-// Lấy tất cả chỉ số dịch vụ (đăng nhập)
+// GET /api/chisodichvu
 router.get('/', authMiddleware, ChiSoDichVuController.getAll);
 
-// Lấy chỉ số theo phòng (đăng nhập) - đặt trước /:id
-router.get('/phong/:Phong_id', authMiddleware, ChiSoDichVuController.getByPhong);
+// GET /api/chisodichvu/hoadon/:MaHoaDon
+router.get('/hoadon/:MaHoaDon', authMiddleware, ChiSoDichVuController.getByHoaDon);
 
-// Lấy chỉ số theo tháng ghi (đăng nhập)
-router.get('/thangghi/:ThangGhi', authMiddleware, ChiSoDichVuController.getByThangGhi);
+// GET /api/chisodichvu/ngayghi/:NgayGhi
+router.get('/ngayghi/:NgayGhi', authMiddleware, ChiSoDichVuController.getByNgayGhi);
 
-// Lấy chỉ số theo ID (đăng nhập)
+// GET /api/chisodichvu/:id (MaGhi)
 router.get('/:id', authMiddleware, ChiSoDichVuController.getById);
 
-// Tạo chỉ số dịch vụ mới (ban quản lý)
-router.post('/', authMiddleware, roleMiddleware(roleMiddleware.ROLES.BAN_QUAN_LY), ChiSoDichVuController.create);
+// POST /api/chisodichvu
+router.post('/', authMiddleware, roleMiddleware(roleMiddleware.ROLES.ADMIN), ChiSoDichVuController.create);
 
-// Cập nhật chỉ số dịch vụ (ban quản lý)
-router.put('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.BAN_QUAN_LY), ChiSoDichVuController.update);
+// PUT /api/chisodichvu/:id (MaGhi)
+router.put('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.ADMIN), ChiSoDichVuController.update);
 
-// Xóa chỉ số dịch vụ (ban quản lý)
-router.delete('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.BAN_QUAN_LY), ChiSoDichVuController.delete);
-
-module.exports = router;
+// DELETE /api/chisodichvu/:id (MaGhi)
+router.delete('/:id', authMiddleware, roleMiddleware(roleMiddleware.ROLES.ADMIN), ChiSoDichVuController.delete);
 
 module.exports = router;

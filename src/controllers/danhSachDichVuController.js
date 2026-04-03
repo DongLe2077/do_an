@@ -1,13 +1,9 @@
 const DanhSachDichVuModel = require('../models/danhSachDichVuModel');
 const response = require('../utils/responseFormat');
 
-// Generate unique ID for DanhSachDichVu
-const generateId = () => {
-    return 'DV' + Date.now().toString().slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
-};
+const generateId = () => 'DV' + Date.now().toString().slice(-8) + Math.random().toString(36).slice(-4).toUpperCase();
 
 const DanhSachDichVuController = {
-    // Lấy tất cả dịch vụ
     getAll: async (req, res) => {
         try {
             const data = await DanhSachDichVuModel.getAll();
@@ -17,71 +13,56 @@ const DanhSachDichVuController = {
         }
     },
 
-    // Lấy dịch vụ theo ID
     getById: async (req, res) => {
         try {
             const { id } = req.params;
             const data = await DanhSachDichVuModel.getById(id);
-            
-            if (!data) {
-                return response.error(res, 'Không tìm thấy dịch vụ', 404);
-            }
-            
+            if (!data) return response.error(res, 'Không tìm thấy dịch vụ', 404);
             return response.success(res, data, 'Lấy thông tin dịch vụ thành công');
         } catch (error) {
             return response.error(res, error.message);
         }
     },
 
-    // Tạo dịch vụ mới
     create: async (req, res) => {
         try {
-            const { TenDichVu, DonGia } = req.body;
-            
-            if (!TenDichVu) {
-                return response.error(res, 'Tên dịch vụ là bắt buộc', 400);
-            }
-            
+            const { TenDichVu, DonGia, DonViTinh, LoaiDichVu } = req.body;
+            if (!TenDichVu) return response.error(res, 'Tên dịch vụ là bắt buộc', 400);
+
             const MaDichVu = generateId();
-            const insertId = await DanhSachDichVuModel.create({ 
-                MaDichVu, 
-                TenDichVu, 
-                DonGia: DonGia || 0 
-            });
-            return response.success(res, { id: insertId, MaDichVu }, 'Tạo dịch vụ thành công', 201);
+            await DanhSachDichVuModel.create({ MaDichVu, TenDichVu, DonGia: DonGia || 0, DonViTinh, LoaiDichVu });
+            return response.success(res, { MaDichVu }, 'Tạo dịch vụ thành công', 201);
         } catch (error) {
             return response.error(res, error.message);
         }
     },
 
-    // Cập nhật dịch vụ
     update: async (req, res) => {
         try {
             const { id } = req.params;
-            const { TenDichVu, DonGia } = req.body;
-            
+            let { TenDichVu, DonGia, DonViTinh, LoaiDichVu } = req.body;
+
             const existing = await DanhSachDichVuModel.getById(id);
-            if (!existing) {
-                return response.error(res, 'Không tìm thấy dịch vụ', 404);
-            }
-            
-            await DanhSachDichVuModel.update(id, { TenDichVu, DonGia });
+            if (!existing) return response.error(res, 'Không tìm thấy dịch vụ', 404);
+
+            TenDichVu = TenDichVu !== undefined ? TenDichVu : existing.TenDichVu;
+            DonGia = DonGia !== undefined ? DonGia : existing.DonGia;
+            DonViTinh = DonViTinh !== undefined ? DonViTinh : existing.DonViTinh;
+            LoaiDichVu = LoaiDichVu !== undefined ? LoaiDichVu : existing.LoaiDichVu;
+
+            await DanhSachDichVuModel.update(id, { TenDichVu, DonGia, DonViTinh, LoaiDichVu });
             return response.success(res, null, 'Cập nhật dịch vụ thành công');
         } catch (error) {
             return response.error(res, error.message);
         }
     },
 
-    // Xóa dịch vụ
     delete: async (req, res) => {
         try {
             const { id } = req.params;
-            
             const existing = await DanhSachDichVuModel.getById(id);
-            if (!existing) {
-                return response.error(res, 'Không tìm thấy dịch vụ', 404);
-            }
-            
+            if (!existing) return response.error(res, 'Không tìm thấy dịch vụ', 404);
+
             await DanhSachDichVuModel.delete(id);
             return response.success(res, null, 'Xóa dịch vụ thành công');
         } catch (error) {

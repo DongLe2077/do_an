@@ -7,14 +7,8 @@ const ToaNhaModel = {
         return rows;
     },
 
-    // Lấy tòa nhà theo ID
-    getById: async (id) => {
-        const [rows] = await db.query('SELECT * FROM toanha WHERE id = ?', [id]);
-        return rows[0];
-    },
-
-    // Lấy tòa nhà theo mã
-    getByMa: async (MaToaNha) => {
+    // Lấy tòa nhà theo MaToaNha
+    getById: async (MaToaNha) => {
         const [rows] = await db.query('SELECT * FROM toanha WHERE MaToaNha = ?', [MaToaNha]);
         return rows[0];
     },
@@ -26,22 +20,22 @@ const ToaNhaModel = {
             'INSERT INTO toanha (MaToaNha, TenToaNha, SoLuongPhong) VALUES (?, ?, ?)',
             [MaToaNha, TenToaNha, SoLuongPhong || 0]
         );
-        return result.insertId;
+        return result.affectedRows;
     },
 
     // Cập nhật tòa nhà
-    update: async (id, data) => {
-        const { MaToaNha, TenToaNha, SoLuongPhong } = data;
+    update: async (MaToaNha, data) => {
+        const { TenToaNha, SoLuongPhong } = data;
         const [result] = await db.query(
-            'UPDATE toanha SET MaToaNha = ?, TenToaNha = ?, SoLuongPhong = ? WHERE id = ?',
-            [MaToaNha, TenToaNha, SoLuongPhong, id]
+            'UPDATE toanha SET TenToaNha = ?, SoLuongPhong = ? WHERE MaToaNha = ?',
+            [TenToaNha, SoLuongPhong, MaToaNha]
         );
         return result.affectedRows;
     },
 
     // Xóa tòa nhà
-    delete: async (id) => {
-        const [result] = await db.query('DELETE FROM toanha WHERE id = ?', [id]);
+    delete: async (MaToaNha) => {
+        const [result] = await db.query('DELETE FROM toanha WHERE MaToaNha = ?', [MaToaNha]);
         return result.affectedRows;
     }
 };

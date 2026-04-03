@@ -4,73 +4,71 @@ const ChiSoDichVuModel = {
     // Lấy tất cả chỉ số dịch vụ
     getAll: async () => {
         const [rows] = await db.query(`
-            SELECT csdv.*, p.SoPhong, dv.TenDichVu, dv.DonGia
+            SELECT csdv.*, dv.TenDichVu, dv.DonGia, dv.LoaiDichVu, hd.MaHoaDon as MaHoaDonRef
             FROM chisodichvu csdv 
-            LEFT JOIN phong p ON csdv.Phong_id = p.id
-            LEFT JOIN danhsachdichvu dv ON csdv.DichVu_id = dv.id
+            LEFT JOIN danhsachdichvu dv ON csdv.MaDichVu = dv.MaDichVu
+            LEFT JOIN hoadon hd ON csdv.MaHoaDon = hd.MaHoaDon
         `);
         return rows;
     },
 
-    // Lấy chỉ số dịch vụ theo ID
-    getById: async (id) => {
+    // Lấy chỉ số dịch vụ theo MaGhi
+    getById: async (MaGhi) => {
         const [rows] = await db.query(`
-            SELECT csdv.*, p.SoPhong, dv.TenDichVu, dv.DonGia
+            SELECT csdv.*, dv.TenDichVu, dv.DonGia, dv.LoaiDichVu
             FROM chisodichvu csdv 
-            LEFT JOIN phong p ON csdv.Phong_id = p.id
-            LEFT JOIN danhsachdichvu dv ON csdv.DichVu_id = dv.id
-            WHERE csdv.id = ?
-        `, [id]);
+            LEFT JOIN danhsachdichvu dv ON csdv.MaDichVu = dv.MaDichVu
+            LEFT JOIN hoadon hd ON csdv.MaHoaDon = hd.MaHoaDon
+            WHERE csdv.MaGhi = ?
+        `, [MaGhi]);
         return rows[0];
     },
 
-    // Lấy chỉ số theo phòng
-    getByPhong: async (Phong_id) => {
+    // Lấy chỉ số theo hóa đơn
+    getByHoaDon: async (MaHoaDon) => {
         const [rows] = await db.query(`
-            SELECT csdv.*, dv.TenDichVu, dv.DonGia
+            SELECT csdv.*, dv.TenDichVu, dv.DonGia, dv.LoaiDichVu
             FROM chisodichvu csdv
-            LEFT JOIN danhsachdichvu dv ON csdv.DichVu_id = dv.id
-            WHERE csdv.Phong_id = ? 
-            ORDER BY csdv.ThangGhi DESC
-        `, [Phong_id]);
+            LEFT JOIN danhsachdichvu dv ON csdv.MaDichVu = dv.MaDichVu
+            WHERE csdv.MaHoaDon = ?
+        `, [MaHoaDon]);
         return rows;
     },
 
-    // Lấy chỉ số theo tháng
-    getByThangGhi: async (ThangGhi) => {
+    // Lấy chỉ số theo ngày ghi
+    getByNgayGhi: async (NgayGhi) => {
         const [rows] = await db.query(`
-            SELECT csdv.*, p.SoPhong, dv.TenDichVu, dv.DonGia
+            SELECT csdv.*, dv.TenDichVu, dv.DonGia, dv.LoaiDichVu
             FROM chisodichvu csdv
-            LEFT JOIN phong p ON csdv.Phong_id = p.id
-            LEFT JOIN danhsachdichvu dv ON csdv.DichVu_id = dv.id
-            WHERE csdv.ThangGhi = ?
-        `, [ThangGhi]);
+            LEFT JOIN danhsachdichvu dv ON csdv.MaDichVu = dv.MaDichVu
+            WHERE csdv.NgayGhi = ?
+        `, [NgayGhi]);
         return rows;
     },
 
     // Tạo chỉ số mới
     create: async (data) => {
-        const { MaGhi, Phong_id, DichVu_id, ChiSoLanGhiTruoc, ChiSoHienTai, ThangGhi } = data;
+        const { MaGhi, MaDichVu, MaHoaDon, ChiSoLanGhiTruoc, ChiSoHienTai, SoLuong, NgayGhi } = data;
         const [result] = await db.query(
-            'INSERT INTO chisodichvu (MaGhi, Phong_id, DichVu_id, ChiSoLanGhiTruoc, ChiSoHienTai, ThangGhi) VALUES (?, ?, ?, ?, ?, ?)',
-            [MaGhi, Phong_id, DichVu_id || null, ChiSoLanGhiTruoc || 0, ChiSoHienTai || 0, ThangGhi]
+            'INSERT INTO chisodichvu (MaGhi, MaDichVu, MaHoaDon, ChiSoLanGhiTruoc, ChiSoHienTai, SoLuong, NgayGhi) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [MaGhi, MaDichVu || null, MaHoaDon || null, ChiSoLanGhiTruoc !== undefined ? ChiSoLanGhiTruoc : null, ChiSoHienTai !== undefined ? ChiSoHienTai : null, SoLuong !== undefined ? SoLuong : null, NgayGhi]
         );
-        return result.insertId;
+        return result.affectedRows;
     },
 
     // Cập nhật chỉ số
-    update: async (id, data) => {
-        const { DichVu_id, ChiSoLanGhiTruoc, ChiSoHienTai, ThangGhi } = data;
+    update: async (MaGhi, data) => {
+        const { MaDichVu, MaHoaDon, ChiSoLanGhiTruoc, ChiSoHienTai, SoLuong, NgayGhi } = data;
         const [result] = await db.query(
-            'UPDATE chisodichvu SET DichVu_id = ?, ChiSoLanGhiTruoc = ?, ChiSoHienTai = ?, ThangGhi = ? WHERE id = ?',
-            [DichVu_id, ChiSoLanGhiTruoc, ChiSoHienTai, ThangGhi, id]
+            'UPDATE chisodichvu SET MaDichVu = ?, MaHoaDon = ?, ChiSoLanGhiTruoc = ?, ChiSoHienTai = ?, SoLuong = ?, NgayGhi = ? WHERE MaGhi = ?',
+            [MaDichVu, MaHoaDon, ChiSoLanGhiTruoc, ChiSoHienTai, SoLuong, NgayGhi, MaGhi]
         );
         return result.affectedRows;
     },
 
     // Xóa chỉ số
-    delete: async (id) => {
-        const [result] = await db.query('DELETE FROM chisodichvu WHERE id = ?', [id]);
+    delete: async (MaGhi) => {
+        const [result] = await db.query('DELETE FROM chisodichvu WHERE MaGhi = ?', [MaGhi]);
         return result.affectedRows;
     }
 };
